@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 
 const DEFAULT_GOOGLE_SHEETS_WEBHOOK_URL =
-  "https://script.google.com/macros/s/AKfycbwyvF4bPy5j_BRo0kRjBT5dm9jyi-YSRh-p5lp09sUgd6lFPf61rA-DA7yS6jVDMidn/exec";
+  "https://script.google.com/macros/s/AKfycbx9V7ajE2jd9zyt9Xm7YYONzI_ZDsF1JQ6RK3k4oG0sX78QdO_LNIfPaSx96mqUGmHt/exec";
 
 const FILE_FIELD_PREFIXES: Record<string, string> = {
   passportPhoto: "01_Passport_Photo",

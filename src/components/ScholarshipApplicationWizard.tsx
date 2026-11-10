@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   Sparkles,
   Printer,
-  FolderCheck,
   Info,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -306,20 +305,28 @@ function calculateAgeFromDob(dobString: string): string {
 function MandatoryLabel({
   text,
   tooltip,
+  noMargin = false,
 }: {
   text: string;
   tooltip: string;
+  noMargin?: boolean;
 }) {
   return (
-    <label className="flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
+    <label
+      className={`block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug ${
+        noMargin ? "" : "mb-1.5"
+      }`}
+    >
       <span>{text}</span>
-      <span className="text-[#BD7959] font-bold">*</span>
-      <span
-        title={tooltip}
-        aria-label={tooltip}
-        className="inline-flex items-center text-[#294735]/75 hover:text-[#16261D] cursor-help transition-colors"
-      >
-        <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 ml-1 align-middle whitespace-nowrap">
+        <span className="text-[#BD7959] font-bold">*</span>
+        <span
+          title={tooltip}
+          aria-label={tooltip}
+          className="inline-flex items-center text-[#294735]/75 hover:text-[#16261D] cursor-help transition-colors"
+        >
+          <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        </span>
       </span>
     </label>
   );
@@ -841,44 +848,6 @@ export default function ScholarshipApplicationWizard() {
               </div>
             </div>
 
-            {/* Saved Folder Hierarchy Info */}
-            <div className="flex items-start gap-3 rounded-xl bg-[#294735]/10 border border-[#294735]/25 p-4 text-xs sm:text-sm text-[#16261D]">
-              <FolderCheck className="h-5 w-5 text-[#294735] shrink-0 mt-0.5" />
-              <div className="space-y-1 min-w-0">
-                <p className="font-semibold text-[#16261D]">
-                  Application Stored in Candidate Folder Structure:
-                </p>
-                <p className="font-mono text-xs text-[#294735] break-all">
-                  Scholarship_Applications_Data / {form.fullName} -{" "}
-                  {submissionResult.referenceNumber} /
-                </p>
-                <ul className="text-xs text-[#525752] list-disc list-inside space-y-0.5 pt-1">
-                  <li>
-                    <code>application-details.txt</code> (Formatted text record)
-                  </li>
-                  <li>
-                    <code>application-details.json</code> (Structured JSON record)
-                  </li>
-                  <li>
-                    <code>Files/</code> ({submissionResult.compressedCount}{" "}
-                    compressed uploaded document(s))
-                  </li>
-                </ul>
-                {submissionResult.driveFolderUrl && (
-                  <p className="pt-2">
-                    <a
-                      href={submissionResult.driveFolderUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#294735] underline hover:text-[#16261D]"
-                    >
-                      Open Candidate Folder in Google Drive →
-                    </a>
-                  </p>
-                )}
-              </div>
-            </div>
-
             <div className="pt-4 border-t border-[#292D29]/12 flex flex-wrap items-center justify-between gap-3 no-print">
               <button
                 type="button"
@@ -1098,16 +1067,19 @@ export default function ScholarshipApplicationWizard() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-start">
                 {/* 1. Full Name */}
                 <div
                   id="field-fullName"
-                  className="sm:col-span-6 scroll-mt-28"
+                  className="sm:col-span-6 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.fullName}
-                    tooltip="Mandatory: Enter your full legal name exactly as printed on your Aadhaar or Government ID card."
-                  />
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.fullName}
+                      tooltip="Mandatory: Enter your full legal name exactly as printed on your Aadhaar or Government ID card."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="text"
                     value={form.fullName}
@@ -1125,11 +1097,17 @@ export default function ScholarshipApplicationWizard() {
                 </div>
 
                 {/* 2. Date of Birth */}
-                <div id="field-dob" className="sm:col-span-3 scroll-mt-28">
-                  <MandatoryLabel
-                    text={t.page1.dob}
-                    tooltip="Mandatory: Select your Date of Birth as recorded on your Aadhaar or 10th marks card."
-                  />
+                <div
+                  id="field-dob"
+                  className="sm:col-span-3 scroll-mt-28 flex flex-col"
+                >
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.dob}
+                      tooltip="Mandatory: Select your Date of Birth as recorded on your Aadhaar or 10th marks card."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="date"
                     value={form.dob}
@@ -1151,11 +1129,17 @@ export default function ScholarshipApplicationWizard() {
                 </div>
 
                 {/* 3. Age at Application */}
-                <div id="field-age" className="sm:col-span-3 scroll-mt-28">
-                  <MandatoryLabel
-                    text={t.page1.age}
-                    tooltip="Mandatory: Applicant must be 18 years or above at the time of joining."
-                  />
+                <div
+                  id="field-age"
+                  className="sm:col-span-3 scroll-mt-28 flex flex-col"
+                >
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.age}
+                      tooltip="Mandatory: Applicant must be 18 years or above at the time of joining."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="number"
                     min={15}
@@ -1175,13 +1159,13 @@ export default function ScholarshipApplicationWizard() {
                 {/* 4. Indian Citizen? */}
                 <div
                   id="field-indianCitizen"
-                  className="sm:col-span-4 scroll-mt-28"
+                  className="sm:col-span-4 scroll-mt-28 flex flex-col"
                 >
                   <MandatoryLabel
                     text={t.page1.indianCitizen}
                     tooltip="Mandatory: Confirm whether you are an Indian citizen."
                   />
-                  <div className="flex items-center gap-5 pt-1">
+                  <div className="flex items-center gap-5 min-h-[2.5rem]">
                     {(
                       [
                         { val: "Yes", label: t.yes },
@@ -1211,12 +1195,15 @@ export default function ScholarshipApplicationWizard() {
                 </div>
 
                 {/* 5. Gender */}
-                <div id="field-gender" className="sm:col-span-8 scroll-mt-28">
+                <div
+                  id="field-gender"
+                  className="sm:col-span-8 scroll-mt-28 flex flex-col"
+                >
                   <MandatoryLabel
                     text={t.page1.gender}
                     tooltip="Mandatory: Select your gender for residential hostel allocation."
                   />
-                  <div className="flex flex-wrap items-center gap-4 pt-1">
+                  <div className="flex flex-wrap items-center gap-4 min-h-[2.5rem]">
                     {(
                       [
                         { val: "Woman", label: t.page1.genderOptions.woman },
@@ -1279,12 +1266,15 @@ export default function ScholarshipApplicationWizard() {
                 {/* 6. Mobile Number & Alternative Contact */}
                 <div
                   id="field-mobileNumber"
-                  className="sm:col-span-4 scroll-mt-28"
+                  className="sm:col-span-4 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.mobileNumber}
-                    tooltip="Mandatory: Enter an active 10-digit Indian mobile number for interview and selection calls."
-                  />
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.mobileNumber}
+                      tooltip="Mandatory: Enter an active 10-digit Indian mobile number for interview and selection calls."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="tel"
                     value={form.mobileNumber}
@@ -1303,13 +1293,15 @@ export default function ScholarshipApplicationWizard() {
                   )}
                 </div>
 
-                <div className="sm:col-span-4">
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page1.alternativeContact}{" "}
-                    <span className="text-xs font-normal text-[#525752]">
-                      {t.optionalTag}
-                    </span>
-                  </label>
+                <div className="sm:col-span-4 flex flex-col">
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page1.alternativeContact}{" "}
+                      <span className="text-xs font-normal text-[#525752]">
+                        {t.optionalTag}
+                      </span>
+                    </label>
+                  </div>
                   <input
                     type="tel"
                     value={form.alternativeContact}
@@ -1322,13 +1314,18 @@ export default function ScholarshipApplicationWizard() {
                 </div>
 
                 {/* 7. Email Address */}
-                <div id="field-email" className="sm:col-span-4 scroll-mt-28">
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page1.email}{" "}
-                    <span className="text-xs font-normal text-[#525752]">
-                      {t.optionalTag}
-                    </span>
-                  </label>
+                <div
+                  id="field-email"
+                  className="sm:col-span-4 scroll-mt-28 flex flex-col"
+                >
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page1.email}{" "}
+                      <span className="text-xs font-normal text-[#525752]">
+                        {t.optionalTag}
+                      </span>
+                    </label>
+                  </div>
                   <input
                     type="email"
                     value={form.email}
@@ -1373,12 +1370,15 @@ export default function ScholarshipApplicationWizard() {
                 {/* 9. Current Address & PIN Code */}
                 <div
                   id="field-currentAddress"
-                  className="sm:col-span-9 scroll-mt-28"
+                  className="sm:col-span-9 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.currentAddress}
-                    tooltip="Mandatory: Enter your complete current residential address."
-                  />
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.currentAddress}
+                      tooltip="Mandatory: Enter your complete current residential address."
+                      noMargin
+                    />
+                  </div>
                   <textarea
                     rows={2}
                     value={form.currentAddress}
@@ -1399,12 +1399,15 @@ export default function ScholarshipApplicationWizard() {
 
                 <div
                   id="field-currentPinCode"
-                  className="sm:col-span-3 scroll-mt-28"
+                  className="sm:col-span-3 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.currentPinCode}
-                    tooltip="Mandatory: Enter your 6-digit postal PIN code."
-                  />
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.currentPinCode}
+                      tooltip="Mandatory: Enter your 6-digit postal PIN code."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="text"
                     maxLength={6}
@@ -1436,6 +1439,7 @@ export default function ScholarshipApplicationWizard() {
                     <MandatoryLabel
                       text={t.page1.permanentAddress}
                       tooltip="Mandatory: Enter your permanent address or tick 'Same as Current Address'."
+                      noMargin
                     />
                     <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#294735]">
                       <input
@@ -1471,12 +1475,15 @@ export default function ScholarshipApplicationWizard() {
                 {/* 11. Village / Town, District, and State */}
                 <div
                   id="field-villageTownDistrictState"
-                  className="sm:col-span-6 scroll-mt-28"
+                  className="sm:col-span-6 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.villageTownDistrictState}
-                    tooltip="Mandatory: Mention your Village/Town, District, and State."
-                  />
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.villageTownDistrictState}
+                      tooltip="Mandatory: Mention your Village/Town, District, and State."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="text"
                     value={form.villageTownDistrictState}
@@ -1500,13 +1507,16 @@ export default function ScholarshipApplicationWizard() {
                 {/* 12. Residence Classification */}
                 <div
                   id="field-residenceClassification"
-                  className="sm:col-span-3 scroll-mt-28"
+                  className="sm:col-span-3 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.residenceClassification}
-                    tooltip="Mandatory: Indicate whether your residence falls under a Rural or Urban area."
-                  />
-                  <div className="flex items-center gap-5 pt-1.5">
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.residenceClassification}
+                      tooltip="Mandatory: Indicate whether your residence falls under a Rural or Urban area."
+                      noMargin
+                    />
+                  </div>
+                  <div className="flex items-center gap-5 h-[2.75rem]">
                     {(
                       [
                         { val: "Rural", label: t.page1.rural },
@@ -1538,10 +1548,12 @@ export default function ScholarshipApplicationWizard() {
                 </div>
 
                 {/* 13. Tribal Community (if claimed) */}
-                <div className="sm:col-span-3">
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page1.tribalCommunity}
-                  </label>
+                <div className="sm:col-span-3 flex flex-col">
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page1.tribalCommunity}
+                    </label>
+                  </div>
                   <input
                     type="text"
                     value={form.tribalCommunity}
@@ -1554,11 +1566,14 @@ export default function ScholarshipApplicationWizard() {
                 </div>
 
                 {/* 14. Government ID Type & Full Aadhaar / ID Number */}
-                <div className="sm:col-span-6">
-                  <MandatoryLabel
-                    text={t.page1.govIdType}
-                    tooltip="Mandatory: Select the Government ID you are providing for identity verification."
-                  />
+                <div className="sm:col-span-6 flex flex-col">
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.govIdType}
+                      tooltip="Mandatory: Select the Government ID you are providing for identity verification."
+                      noMargin
+                    />
+                  </div>
                   <select
                     value={form.govIdType}
                     onChange={(e) => {
@@ -1577,20 +1592,23 @@ export default function ScholarshipApplicationWizard() {
 
                 <div
                   id="field-govIdNumber"
-                  className="sm:col-span-6 scroll-mt-28"
+                  className="sm:col-span-6 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={
-                      form.govIdType === "Aadhaar Card"
-                        ? t.page1.aadhaarNumber
-                        : t.page1.govIdNumber
-                    }
-                    tooltip={
-                      form.govIdType === "Aadhaar Card"
-                        ? "Mandatory: Enter your complete 12-digit Aadhaar Card number."
-                        : "Mandatory: Enter your complete official Government ID number."
-                    }
-                  />
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={
+                        form.govIdType === "Aadhaar Card"
+                          ? t.page1.aadhaarNumber
+                          : t.page1.govIdNumber
+                      }
+                      tooltip={
+                        form.govIdType === "Aadhaar Card"
+                          ? "Mandatory: Enter your complete 12-digit Aadhaar Card number."
+                          : "Mandatory: Enter your complete official Government ID number."
+                      }
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="text"
                     value={form.govIdNumber}
@@ -1779,15 +1797,18 @@ export default function ScholarshipApplicationWizard() {
               </div>
 
               {/* Languages Understood & Preferred Interview Language */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 items-start">
                 <div
                   id="field-languagesUnderstood"
-                  className="scroll-mt-28"
+                  className="scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.languagesUnderstood}
-                    tooltip="Mandatory: List the languages you can speak, read, or write."
-                  />
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.languagesUnderstood}
+                      tooltip="Mandatory: List the languages you can speak, read, or write."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="text"
                     value={form.languagesUnderstood}
@@ -1808,12 +1829,15 @@ export default function ScholarshipApplicationWizard() {
 
                 <div
                   id="field-preferredInterviewLanguage"
-                  className="scroll-mt-28"
+                  className="scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page1.preferredInterviewLanguage}
-                    tooltip="Mandatory: Choose the language in which you would like your selection interview conducted."
-                  />
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page1.preferredInterviewLanguage}
+                      tooltip="Mandatory: Choose the language in which you would like your selection interview conducted."
+                      noMargin
+                    />
+                  </div>
                   <select
                     value={form.preferredInterviewLanguage}
                     onChange={(e) =>
@@ -1862,11 +1886,13 @@ export default function ScholarshipApplicationWizard() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                <div className="sm:col-span-3">
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page2.financialYear}
-                  </label>
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
+                <div className="sm:col-span-3 flex flex-col">
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page2.financialYear}
+                    </label>
+                  </div>
                   <select
                     value={form.financialYear}
                     onChange={(e) =>
@@ -1882,12 +1908,15 @@ export default function ScholarshipApplicationWizard() {
 
                 <div
                   id="field-totalAnnualFamilyIncome"
-                  className="sm:col-span-3 scroll-mt-28"
+                  className="sm:col-span-3 scroll-mt-28 flex flex-col"
                 >
-                  <MandatoryLabel
-                    text={t.page2.totalAnnualFamilyIncome}
-                    tooltip="Mandatory: Enter total annual household income from all sources in INR (must be up to ₹3,00,000 for scholarship eligibility)."
-                  />
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page2.totalAnnualFamilyIncome}
+                      tooltip="Mandatory: Enter total annual household income from all sources in INR (must be up to ₹3,00,000 for scholarship eligibility)."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="number"
                     min={0}
@@ -1907,10 +1936,12 @@ export default function ScholarshipApplicationWizard() {
                   )}
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page2.householdMembers}
-                  </label>
+                <div className="sm:col-span-2 flex flex-col">
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page2.householdMembers}
+                    </label>
+                  </div>
                   <input
                     type="number"
                     min={1}
@@ -1923,10 +1954,12 @@ export default function ScholarshipApplicationWizard() {
                   />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page2.earningMembers}
-                  </label>
+                <div className="sm:col-span-2 flex flex-col">
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page2.earningMembers}
+                    </label>
+                  </div>
                   <input
                     type="number"
                     min={0}
@@ -1939,10 +1972,12 @@ export default function ScholarshipApplicationWizard() {
                   />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page2.dependantsCount}
-                  </label>
+                <div className="sm:col-span-2 flex flex-col">
+                  <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page2.dependantsCount}
+                    </label>
+                  </div>
                   <input
                     type="number"
                     min={0}
@@ -1983,25 +2018,25 @@ export default function ScholarshipApplicationWizard() {
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-[#292D29]/15">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse table-fixed min-w-[540px]">
                     <thead>
                       <tr className="bg-[#16261D] text-[#E5C67E] text-xs uppercase tracking-wider">
-                        <th className="py-2.5 px-3.5 font-semibold">
+                        <th className="py-2.5 px-3 font-semibold w-[38%]">
                           {t.page2.earnerNameCol}
                         </th>
-                        <th className="py-2.5 px-3.5 font-semibold">
+                        <th className="py-2.5 px-3 font-semibold w-[32%]">
                           {t.page2.relationshipCol}
                         </th>
-                        <th className="py-2.5 px-3.5 font-semibold">
+                        <th className="py-2.5 px-3 font-semibold w-[22%]">
                           {t.page2.annualAmountCol}
                         </th>
-                        <th className="py-2.5 px-2 w-10" />
+                        <th className="py-2.5 px-2 w-[8%]" />
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#292D29]/12 bg-[#FFFFFF] text-sm">
                       {form.incomeSources.map((row, idx) => (
-                        <tr key={row.id}>
-                          <td className="p-2.5">
+                        <tr key={row.id} className="hover:bg-[#F7F2E8]/40">
+                          <td className="p-2.5 align-middle">
                             <input
                               type="text"
                               value={row.earnerName}
@@ -2017,7 +2052,7 @@ export default function ScholarshipApplicationWizard() {
                               className="akshar-input"
                             />
                           </td>
-                          <td className="p-2.5">
+                          <td className="p-2.5 align-middle">
                             <input
                               type="text"
                               value={row.relationship}
@@ -2033,7 +2068,7 @@ export default function ScholarshipApplicationWizard() {
                               className="akshar-input"
                             />
                           </td>
-                          <td className="p-2.5">
+                          <td className="p-2.5 align-middle">
                             <input
                               type="number"
                               min={0}
@@ -2050,7 +2085,7 @@ export default function ScholarshipApplicationWizard() {
                               className="akshar-input"
                             />
                           </td>
-                          <td className="p-2.5 text-center">
+                          <td className="p-2.5 align-middle text-center">
                             {form.incomeSources.length > 1 && (
                               <button
                                 type="button"
@@ -2122,11 +2157,13 @@ export default function ScholarshipApplicationWizard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      {t.page2.issuingAuthority}
-                    </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+                  <div className="flex flex-col">
+                    <div className="min-h-[2rem] flex items-end mb-1.5">
+                      <label className="block text-xs font-semibold text-[#16261D] leading-snug">
+                        {t.page2.issuingAuthority}
+                      </label>
+                    </div>
                     <input
                       type="text"
                       value={form.incomeIssuingAuthority}
@@ -2137,10 +2174,12 @@ export default function ScholarshipApplicationWizard() {
                       className="akshar-input"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      {t.page2.issueDateValidity}
-                    </label>
+                  <div className="flex flex-col">
+                    <div className="min-h-[2rem] flex items-end mb-1.5">
+                      <label className="block text-xs font-semibold text-[#16261D] leading-snug">
+                        {t.page2.issueDateValidity}
+                      </label>
+                    </div>
                     <input
                       type="date"
                       value={form.incomeIssueDate}
@@ -2150,10 +2189,12 @@ export default function ScholarshipApplicationWizard() {
                       className="akshar-input"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      {t.page2.certRefNumber}
-                    </label>
+                  <div className="flex flex-col">
+                    <div className="min-h-[2rem] flex items-end mb-1.5">
+                      <label className="block text-xs font-semibold text-[#16261D] leading-snug">
+                        {t.page2.certRefNumber}
+                      </label>
+                    </div>
                     <input
                       type="text"
                       value={form.incomeCertRefNumber}
@@ -2164,10 +2205,12 @@ export default function ScholarshipApplicationWizard() {
                       className="akshar-input"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      {t.page2.materialIncomeChange}
-                    </label>
+                  <div className="flex flex-col">
+                    <div className="min-h-[2rem] flex items-end mb-1.5">
+                      <label className="block text-xs font-semibold text-[#16261D] leading-snug">
+                        {t.page2.materialIncomeChange}
+                      </label>
+                    </div>
                     <input
                       type="text"
                       value={form.materialIncomeChangeDetails}
@@ -2373,11 +2416,13 @@ export default function ScholarshipApplicationWizard() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-                  <div>
-                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                      {t.page2.monthlyIncome}
-                    </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-1 items-start">
+                  <div className="flex flex-col">
+                    <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                      <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                        {t.page2.monthlyIncome}
+                      </label>
+                    </div>
                     <input
                       type="number"
                       min={0}
@@ -2392,13 +2437,16 @@ export default function ScholarshipApplicationWizard() {
 
                   <div
                     id="field-canAttendCompleteCourse"
-                    className="scroll-mt-28"
+                    className="scroll-mt-28 flex flex-col"
                   >
-                    <MandatoryLabel
-                      text={t.page2.canAttendCourse}
-                      tooltip="Mandatory: Confirm your availability for the complete 45-day residential training in Bengaluru."
-                    />
-                    <div className="flex flex-wrap gap-4 pt-1.5">
+                    <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                      <MandatoryLabel
+                        text={t.page2.canAttendCourse}
+                        tooltip="Mandatory: Confirm your availability for the complete 45-day residential training in Bengaluru."
+                        noMargin
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 min-h-[2.75rem]">
                       {(
                         [
                           { val: "Yes", label: t.yes },
@@ -2427,11 +2475,13 @@ export default function ScholarshipApplicationWizard() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-2">
-                      {t.page2.leaveNocStatus}
-                    </label>
-                    <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-col">
+                    <div className="min-h-[2.25rem] flex items-end mb-1.5">
+                      <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                        {t.page2.leaveNocStatus}
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 min-h-[2.75rem]">
                       {(
                         [
                           "Available",
@@ -2742,12 +2792,18 @@ export default function ScholarshipApplicationWizard() {
               </div>
 
               {/* Place & Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div id="field-declarationPlace" className="scroll-mt-28">
-                  <MandatoryLabel
-                    text={t.page4.placeCity}
-                    tooltip="Mandatory: Enter the town or city from where you are submitting this application."
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <div
+                  id="field-declarationPlace"
+                  className="scroll-mt-28 flex flex-col"
+                >
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <MandatoryLabel
+                      text={t.page4.placeCity}
+                      tooltip="Mandatory: Enter the town or city from where you are submitting this application."
+                      noMargin
+                    />
+                  </div>
                   <input
                     type="text"
                     value={form.declarationPlace}
@@ -2766,10 +2822,12 @@ export default function ScholarshipApplicationWizard() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    {t.page4.dateLabel}
-                  </label>
+                <div className="flex flex-col">
+                  <div className="min-h-[2rem] flex items-end mb-1.5">
+                    <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] leading-snug">
+                      {t.page4.dateLabel}
+                    </label>
+                  </div>
                   <input
                     type="date"
                     value={form.declarationDate}
@@ -2805,15 +2863,18 @@ export default function ScholarshipApplicationWizard() {
 
               {form.wasAssisted && (
                 <div className="rounded-xl bg-[#F7F2E8]/60 border border-[#292D29]/15 p-4 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                     <div
                       id="field-assistedLanguageUsed"
-                      className="scroll-mt-28"
+                      className="scroll-mt-28 flex flex-col"
                     >
-                      <MandatoryLabel
-                        text={t.page4.assistedLanguageUsed}
-                        tooltip="Mandatory when assisted: Enter the language used to explain the form to the applicant."
-                      />
+                      <div className="min-h-[2rem] flex items-end mb-1.5">
+                        <MandatoryLabel
+                          text={t.page4.assistedLanguageUsed}
+                          tooltip="Mandatory when assisted: Enter the language used to explain the form to the applicant."
+                          noMargin
+                        />
+                      </div>
                       <input
                         type="text"
                         value={form.assistedLanguageUsed}
@@ -2836,12 +2897,15 @@ export default function ScholarshipApplicationWizard() {
 
                     <div
                       id="field-assistantNameContact"
-                      className="scroll-mt-28"
+                      className="scroll-mt-28 flex flex-col"
                     >
-                      <MandatoryLabel
-                        text={t.page4.assistantNameContact}
-                        tooltip="Mandatory when assisted: Enter the full name and phone number of the person who assisted."
-                      />
+                      <div className="min-h-[2rem] flex items-end mb-1.5">
+                        <MandatoryLabel
+                          text={t.page4.assistantNameContact}
+                          tooltip="Mandatory when assisted: Enter the full name and phone number of the person who assisted."
+                          noMargin
+                        />
+                      </div>
                       <input
                         type="text"
                         value={form.assistantNameContact}
