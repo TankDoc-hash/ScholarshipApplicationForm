@@ -16,6 +16,7 @@ import {
   formatBytes,
   processAndCompressFile,
 } from "@/utils/imageCompression";
+import { useLanguage } from "@/context/LanguageContext";
 
 export type DocumentItemStatus = "uploaded" | "pending" | "na";
 
@@ -48,6 +49,7 @@ export default function CompressedFileUploader({
   onFileProcessed,
   errorMessage,
 }: CompressedFileUploaderProps) {
+  const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
@@ -129,7 +131,7 @@ export default function CompressedFileUploader({
                 </span>
               ) : (
                 <span className="text-xs font-normal text-[#525752]">
-                  (Optional)
+                  {t.optionalTag}
                 </span>
               )}
             </h4>
@@ -156,7 +158,7 @@ export default function CompressedFileUploader({
                 : "text-[#525752] hover:text-[#16261D]"
             }`}
           >
-            Attach File
+            {t.attachFile}
           </button>
           <button
             type="button"
@@ -170,7 +172,7 @@ export default function CompressedFileUploader({
                 : "text-[#525752] hover:text-[#16261D]"
             }`}
           >
-            Pending
+            {t.pending}
           </button>
           {allowNotApplicable && (
             <button
@@ -185,7 +187,7 @@ export default function CompressedFileUploader({
                   : "text-[#525752] hover:text-[#16261D]"
               }`}
             >
-              Not Applicable
+              {t.notApplicable}
             </button>
           )}
         </div>
@@ -286,10 +288,10 @@ export default function CompressedFileUploader({
             >
               <UploadCloud className="mx-auto h-7 w-7 text-[#294735]" />
               <p className="mt-1.5 text-xs sm:text-sm font-medium text-[#16261D]">
-                Click to select or drag & drop file here
+                {t.page3.dropzoneClickOrDrag}
               </p>
               <p className="mt-0.5 text-[11px] text-[#525752]">
-                Allowed: .JPG, .PNG, .PDF (Max 5 MB) · Photos are auto-compressed
+                {t.page3.dropzoneFormats}
               </p>
             </div>
           )}

@@ -23,14 +23,40 @@
  */
 
 const SHEET_NAME = "CandidateApplications";
+const MAIN_DRIVE_FOLDER_ID = "1P-A_j436X4Wtn0jCElmLWiC-H0lUzJ7-";
 const ROOT_DRIVE_FOLDER_NAME = "Akshar_Yoga_Scholarship_Applications_2026";
 
 function getOrCreateRootFolder() {
+  if (MAIN_DRIVE_FOLDER_ID) {
+    try {
+      return DriveApp.getFolderById(MAIN_DRIVE_FOLDER_ID);
+    } catch (e) {
+      // Fallback to folder name search if ID is inaccessible
+    }
+  }
   const folders = DriveApp.getFoldersByName(ROOT_DRIVE_FOLDER_NAME);
   if (folders.hasNext()) {
     return folders.next();
   }
   return DriveApp.createFolder(ROOT_DRIVE_FOLDER_NAME);
+}
+
+function getOrCreateMasterSpreadsheet(rootFolder) {
+  try {
+    const active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) return active;
+  } catch (e) {
+    // Running as standalone script
+  }
+  const sheetFileName = "Akshar_Yoga_Scholarship_Master_Applications";
+  const existingFiles = rootFolder.getFilesByName(sheetFileName);
+  if (existingFiles.hasNext()) {
+    return SpreadsheetApp.open(existingFiles.next());
+  }
+  const created = SpreadsheetApp.create(sheetFileName);
+  const file = DriveApp.getFileById(created.getId());
+  file.moveTo(rootFolder);
+  return created;
 }
 
 function saveBase64FileToFolder(folder, fileObj, prefixLabel) {
@@ -116,7 +142,7 @@ function doPost(e) {
     // =======================================================================
     // 2. LOG SUMMARY ROW IN GOOGLE SHEETS
     // =======================================================================
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getOrCreateMasterSpreadsheet(rootFolder);
     let sheet = ss.getSheetByName(SHEET_NAME);
 
     const headers = [

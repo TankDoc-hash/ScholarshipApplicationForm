@@ -864,6 +864,18 @@ export default function ScholarshipApplicationWizard() {
                     compressed uploaded document(s))
                   </li>
                 </ul>
+                {submissionResult.driveFolderUrl && (
+                  <p className="pt-2">
+                    <a
+                      href={submissionResult.driveFolderUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#294735] underline hover:text-[#16261D]"
+                    >
+                      Open Candidate Folder in Google Drive →
+                    </a>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1054,7 +1066,7 @@ export default function ScholarshipApplicationWizard() {
             <p className="font-semibold text-[#16261D]">{pageBannerError}</p>
           </div>
           <span className="text-xs font-semibold underline text-[#BD7959] shrink-0">
-            Jump to field →
+            {t.jumpToField}
           </span>
         </div>
       )}
@@ -1093,7 +1105,7 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-6 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="1. Full Name (as on Aadhaar / official ID)"
+                    text={t.page1.fullName}
                     tooltip="Mandatory: Enter your full legal name exactly as printed on your Aadhaar or Government ID card."
                   />
                   <input
@@ -1115,7 +1127,7 @@ export default function ScholarshipApplicationWizard() {
                 {/* 2. Date of Birth */}
                 <div id="field-dob" className="sm:col-span-3 scroll-mt-28">
                   <MandatoryLabel
-                    text="2. Date of Birth (DD/MM/YYYY)"
+                    text={t.page1.dob}
                     tooltip="Mandatory: Select your Date of Birth as recorded on your Aadhaar or 10th marks card."
                   />
                   <input
@@ -1141,7 +1153,7 @@ export default function ScholarshipApplicationWizard() {
                 {/* 3. Age at Application */}
                 <div id="field-age" className="sm:col-span-3 scroll-mt-28">
                   <MandatoryLabel
-                    text="3. Age at Application (Years)"
+                    text={t.page1.age}
                     tooltip="Mandatory: Applicant must be 18 years or above at the time of joining."
                   />
                   <input
@@ -1166,23 +1178,28 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-4 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="4. Indian Citizen?"
+                    text={t.page1.indianCitizen}
                     tooltip="Mandatory: Confirm whether you are an Indian citizen."
                   />
                   <div className="flex items-center gap-5 pt-1">
-                    {(["Yes", "No"] as const).map((opt) => (
+                    {(
+                      [
+                        { val: "Yes", label: t.yes },
+                        { val: "No", label: t.no },
+                      ] as const
+                    ).map((opt) => (
                       <label
-                        key={opt}
+                        key={opt.val}
                         className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#292D29]"
                       >
                         <input
                           type="radio"
                           name="indianCitizen"
-                          checked={form.indianCitizen === opt}
-                          onChange={() => updateField("indianCitizen", opt)}
+                          checked={form.indianCitizen === opt.val}
+                          onChange={() => updateField("indianCitizen", opt.val)}
                           className="h-4 w-4 accent-[#294735]"
                         />
-                        <span>{opt}</span>
+                        <span>{opt.label}</span>
                       </label>
                     ))}
                   </div>
@@ -1196,30 +1213,36 @@ export default function ScholarshipApplicationWizard() {
                 {/* 5. Gender */}
                 <div id="field-gender" className="sm:col-span-8 scroll-mt-28">
                   <MandatoryLabel
-                    text="5. Gender"
+                    text={t.page1.gender}
                     tooltip="Mandatory: Select your gender for residential hostel allocation."
                   />
                   <div className="flex flex-wrap items-center gap-4 pt-1">
                     {(
                       [
-                        "Woman",
-                        "Man",
-                        "Other or self-describe",
-                        "Prefer not to say",
+                        { val: "Woman", label: t.page1.genderOptions.woman },
+                        { val: "Man", label: t.page1.genderOptions.man },
+                        {
+                          val: "Other or self-describe",
+                          label: t.page1.genderOptions.other,
+                        },
+                        {
+                          val: "Prefer not to say",
+                          label: t.page1.genderOptions.preferNot,
+                        },
                       ] as const
                     ).map((opt) => (
                       <label
-                        key={opt}
+                        key={opt.val}
                         className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#292D29]"
                       >
                         <input
                           type="radio"
                           name="gender"
-                          checked={form.gender === opt}
-                          onChange={() => updateField("gender", opt)}
+                          checked={form.gender === opt.val}
+                          onChange={() => updateField("gender", opt.val)}
                           className="h-4 w-4 accent-[#294735]"
                         />
-                        <span>{opt}</span>
+                        <span>{opt.label}</span>
                       </label>
                     ))}
                   </div>
@@ -1259,7 +1282,7 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-4 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="6A. Primary Mobile / WhatsApp Number"
+                    text={t.page1.mobileNumber}
                     tooltip="Mandatory: Enter an active 10-digit Indian mobile number for interview and selection calls."
                   />
                   <input
@@ -1282,7 +1305,10 @@ export default function ScholarshipApplicationWizard() {
 
                 <div className="sm:col-span-4">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    6B. Alternative Contact Number
+                    {t.page1.alternativeContact}{" "}
+                    <span className="text-xs font-normal text-[#525752]">
+                      {t.optionalTag}
+                    </span>
                   </label>
                   <input
                     type="tel"
@@ -1298,9 +1324,9 @@ export default function ScholarshipApplicationWizard() {
                 {/* 7. Email Address */}
                 <div id="field-email" className="sm:col-span-4 scroll-mt-28">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    7. Email Address{" "}
+                    {t.page1.email}{" "}
                     <span className="text-xs font-normal text-[#525752]">
-                      (Optional)
+                      {t.optionalTag}
                     </span>
                   </label>
                   <input
@@ -1323,7 +1349,7 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-12 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="8. Parent / Guardian / Spouse Name & Relationship"
+                    text={t.page1.guardianNameRelation}
                     tooltip="Mandatory: Provide the full name of your Father, Mother, Guardian, or Spouse along with your relationship."
                   />
                   <input
@@ -1350,7 +1376,7 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-9 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="9A. Current Residential Address"
+                    text={t.page1.currentAddress}
                     tooltip="Mandatory: Enter your complete current residential address."
                   />
                   <textarea
@@ -1376,7 +1402,7 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-3 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="9B. Current PIN Code"
+                    text={t.page1.currentPinCode}
                     tooltip="Mandatory: Enter your 6-digit postal PIN code."
                   />
                   <input
@@ -1408,7 +1434,7 @@ export default function ScholarshipApplicationWizard() {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                     <MandatoryLabel
-                      text="10. Permanent Address"
+                      text={t.page1.permanentAddress}
                       tooltip="Mandatory: Enter your permanent address or tick 'Same as Current Address'."
                     />
                     <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#294735]">
@@ -1420,7 +1446,7 @@ export default function ScholarshipApplicationWizard() {
                         }
                         className="h-4 w-4 rounded accent-[#294735]"
                       />
-                      <span>Same as Current Address</span>
+                      <span>{t.page1.sameAsCurrentAddress}</span>
                     </label>
                   </div>
                   <textarea
@@ -1448,7 +1474,7 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-6 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="11. Village / Town, District, and State"
+                    text={t.page1.villageTownDistrictState}
                     tooltip="Mandatory: Mention your Village/Town, District, and State."
                   />
                   <input
@@ -1477,25 +1503,30 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-3 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="12. Residence Classification"
+                    text={t.page1.residenceClassification}
                     tooltip="Mandatory: Indicate whether your residence falls under a Rural or Urban area."
                   />
                   <div className="flex items-center gap-5 pt-1.5">
-                    {(["Rural", "Urban"] as const).map((opt) => (
+                    {(
+                      [
+                        { val: "Rural", label: t.page1.rural },
+                        { val: "Urban", label: t.page1.urban },
+                      ] as const
+                    ).map((opt) => (
                       <label
-                        key={opt}
+                        key={opt.val}
                         className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#292D29]"
                       >
                         <input
                           type="radio"
                           name="residenceClassification"
-                          checked={form.residenceClassification === opt}
+                          checked={form.residenceClassification === opt.val}
                           onChange={() =>
-                            updateField("residenceClassification", opt)
+                            updateField("residenceClassification", opt.val)
                           }
                           className="h-4 w-4 accent-[#294735]"
                         />
-                        <span>{opt}</span>
+                        <span>{opt.label}</span>
                       </label>
                     ))}
                   </div>
@@ -1509,7 +1540,7 @@ export default function ScholarshipApplicationWizard() {
                 {/* 13. Tribal Community (if claimed) */}
                 <div className="sm:col-span-3">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    13. Tribal Community (if claimed)
+                    {t.page1.tribalCommunity}
                   </label>
                   <input
                     type="text"
@@ -1525,7 +1556,7 @@ export default function ScholarshipApplicationWizard() {
                 {/* 14. Government ID Type & Full Aadhaar / ID Number */}
                 <div className="sm:col-span-6">
                   <MandatoryLabel
-                    text="14A. Government ID Type"
+                    text={t.page1.govIdType}
                     tooltip="Mandatory: Select the Government ID you are providing for identity verification."
                   />
                   <select
@@ -1551,8 +1582,8 @@ export default function ScholarshipApplicationWizard() {
                   <MandatoryLabel
                     text={
                       form.govIdType === "Aadhaar Card"
-                        ? "14B. Aadhaar Number (12 Digits)"
-                        : "14B. Government ID Number"
+                        ? t.page1.aadhaarNumber
+                        : t.page1.govIdNumber
                     }
                     tooltip={
                       form.govIdType === "Aadhaar Card"
@@ -1613,7 +1644,7 @@ export default function ScholarshipApplicationWizard() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-[#294735] bg-[#294735]/5 hover:bg-[#294735]/10 px-3 py-1.5 text-xs font-semibold text-[#294735] transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Add Qualification Row
+                  {t.page1.addQualificationRow}
                 </button>
               </div>
 
@@ -1623,16 +1654,16 @@ export default function ScholarshipApplicationWizard() {
                   <thead>
                     <tr className="bg-[#16261D] text-[#E5C67E] text-xs uppercase tracking-wider">
                       <th className="py-3 px-3.5 font-semibold">
-                        Qualification Level
+                        {t.page1.qualLevelCol}
                       </th>
                       <th className="py-3 px-3.5 font-semibold">
-                        Board / Institution
+                        {t.page1.boardCol}
                       </th>
                       <th className="py-3 px-3.5 font-semibold w-32">
-                        Year of Passing
+                        {t.page1.yearCol}
                       </th>
                       <th className="py-3 px-3.5 font-semibold">
-                        Certificate Status
+                        {t.page1.certStatusCol}
                       </th>
                       <th className="py-3 px-2 w-10" />
                     </tr>
@@ -1692,30 +1723,34 @@ export default function ScholarshipApplicationWizard() {
                         </td>
                         <td className="p-2.5 align-middle">
                           <div className="flex flex-wrap items-center gap-3">
-                            {(["Attached", "Pending", "N/A"] as const).map(
-                              (st) => (
-                                <label
-                                  key={st}
-                                  className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-medium text-[#292D29]"
-                                >
-                                  <input
-                                    type="radio"
-                                    name={`cert-status-${row.id}`}
-                                    checked={row.certificateStatus === st}
-                                    onChange={() => {
-                                      const updated = [...form.educationRows];
-                                      updated[idx] = {
-                                        ...row,
-                                        certificateStatus: st,
-                                      };
-                                      updateField("educationRows", updated);
-                                    }}
-                                    className="h-3.5 w-3.5 accent-[#294735]"
-                                  />
-                                  <span>{st}</span>
-                                </label>
-                              )
-                            )}
+                            {(
+                              [
+                                { val: "Attached", label: t.attached },
+                                { val: "Pending", label: t.pending },
+                                { val: "N/A", label: t.notApplicable },
+                              ] as const
+                            ).map((st) => (
+                              <label
+                                key={st.val}
+                                className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-medium text-[#292D29]"
+                              >
+                                <input
+                                  type="radio"
+                                  name={`cert-status-${row.id}`}
+                                  checked={row.certificateStatus === st.val}
+                                  onChange={() => {
+                                    const updated = [...form.educationRows];
+                                    updated[idx] = {
+                                      ...row,
+                                      certificateStatus: st.val,
+                                    };
+                                    updateField("educationRows", updated);
+                                  }}
+                                  className="h-3.5 w-3.5 accent-[#294735]"
+                                />
+                                <span>{st.label}</span>
+                              </label>
+                            ))}
                           </div>
                         </td>
                         <td className="p-2.5 align-middle text-center">
@@ -1750,7 +1785,7 @@ export default function ScholarshipApplicationWizard() {
                   className="scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="Languages Understood (Speak / Read / Write)"
+                    text={t.page1.languagesUnderstood}
                     tooltip="Mandatory: List the languages you can speak, read, or write."
                   />
                   <input
@@ -1776,7 +1811,7 @@ export default function ScholarshipApplicationWizard() {
                   className="scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="Preferred Interview Language"
+                    text={t.page1.preferredInterviewLanguage}
                     tooltip="Mandatory: Choose the language in which you would like your selection interview conducted."
                   />
                   <select
@@ -1830,7 +1865,7 @@ export default function ScholarshipApplicationWizard() {
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
                 <div className="sm:col-span-3">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    1. Financial Year Covered
+                    {t.page2.financialYear}
                   </label>
                   <select
                     value={form.financialYear}
@@ -1850,7 +1885,7 @@ export default function ScholarshipApplicationWizard() {
                   className="sm:col-span-3 scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="2. Total Annual Family Income (₹)"
+                    text={t.page2.totalAnnualFamilyIncome}
                     tooltip="Mandatory: Enter total annual household income from all sources in INR (must be up to ₹3,00,000 for scholarship eligibility)."
                   />
                   <input
@@ -1874,7 +1909,7 @@ export default function ScholarshipApplicationWizard() {
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    3. Household Members
+                    {t.page2.householdMembers}
                   </label>
                   <input
                     type="number"
@@ -1890,7 +1925,7 @@ export default function ScholarshipApplicationWizard() {
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    4. Earning Members
+                    {t.page2.earningMembers}
                   </label>
                   <input
                     type="number"
@@ -1906,7 +1941,7 @@ export default function ScholarshipApplicationWizard() {
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    5. Dependants Count
+                    {t.page2.dependantsCount}
                   </label>
                   <input
                     type="number"
@@ -1925,7 +1960,7 @@ export default function ScholarshipApplicationWizard() {
               <div className="space-y-3 pt-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D]">
-                    6. Household Income Sources Table
+                    {t.page2.incomeSourcesTable}
                   </label>
                   <button
                     type="button"
@@ -1943,7 +1978,7 @@ export default function ScholarshipApplicationWizard() {
                     className="inline-flex items-center gap-1.5 rounded-lg border border-[#294735] bg-[#294735]/5 hover:bg-[#294735]/10 px-3 py-1.5 text-xs font-semibold text-[#294735]"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    Add Income Earner / Source
+                    {t.page2.addIncomeSource}
                   </button>
                 </div>
 
@@ -1952,13 +1987,13 @@ export default function ScholarshipApplicationWizard() {
                     <thead>
                       <tr className="bg-[#16261D] text-[#E5C67E] text-xs uppercase tracking-wider">
                         <th className="py-2.5 px-3.5 font-semibold">
-                          Earner / Source Name
+                          {t.page2.earnerNameCol}
                         </th>
                         <th className="py-2.5 px-3.5 font-semibold">
-                          Relationship to Applicant
+                          {t.page2.relationshipCol}
                         </th>
                         <th className="py-2.5 px-3.5 font-semibold">
-                          Annual Amount (₹)
+                          {t.page2.annualAmountCol}
                         </th>
                         <th className="py-2.5 px-2 w-10" />
                       </tr>
@@ -2043,7 +2078,7 @@ export default function ScholarshipApplicationWizard() {
               {/* 7. Other Income, Pension, or Support details */}
               <div>
                 <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                  7. Other Income, Pension, or Support Details (if any)
+                  {t.page2.otherIncomeSupport}
                 </label>
                 <input
                   type="text"
@@ -2060,7 +2095,7 @@ export default function ScholarshipApplicationWizard() {
               <div className="rounded-xl bg-[#F7F2E8]/60 border border-[#292D29]/12 p-4 space-y-4">
                 <div>
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-2">
-                    8. Income Proof Type (Select all that apply)
+                    {t.page2.incomeProofType}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                     {[
@@ -2090,7 +2125,7 @@ export default function ScholarshipApplicationWizard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      Issuing Authority
+                      {t.page2.issuingAuthority}
                     </label>
                     <input
                       type="text"
@@ -2104,7 +2139,7 @@ export default function ScholarshipApplicationWizard() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      Issue Date / Validity
+                      {t.page2.issueDateValidity}
                     </label>
                     <input
                       type="date"
@@ -2117,7 +2152,7 @@ export default function ScholarshipApplicationWizard() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      Certificate Reference Number
+                      {t.page2.certRefNumber}
                     </label>
                     <input
                       type="text"
@@ -2131,7 +2166,7 @@ export default function ScholarshipApplicationWizard() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#16261D] mb-1">
-                      Material Current Income Change
+                      {t.page2.materialIncomeChange}
                     </label>
                     <input
                       type="text"
@@ -2164,8 +2199,7 @@ export default function ScholarshipApplicationWizard() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-2">
-                    Relevant Household & Personal Circumstances (Select all that
-                    apply)
+                    {t.page2.relevantCircumstances}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {[
@@ -2213,7 +2247,7 @@ export default function ScholarshipApplicationWizard() {
                 {/* Priority Category Claimed */}
                 <div>
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-2">
-                    Priority Category Claimed (if applicable)
+                    {t.page2.priorityCategoryClaimed}
                   </label>
                   <div className="flex flex-wrap gap-2.5">
                     {[
@@ -2251,24 +2285,29 @@ export default function ScholarshipApplicationWizard() {
                 {/* Evidence Status */}
                 <div>
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    Priority / Category Evidence Status
+                    {t.page2.priorityEvidenceStatus}
                   </label>
                   <div className="flex items-center gap-6">
-                    {(["Attached", "Pending"] as const).map((st) => (
+                    {(
+                      [
+                        { val: "Attached", label: t.attached },
+                        { val: "Pending", label: t.pending },
+                      ] as const
+                    ).map((st) => (
                       <label
-                        key={st}
+                        key={st.val}
                         className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#292D29]"
                       >
                         <input
                           type="radio"
                           name="priorityEvidenceStatus"
-                          checked={form.priorityEvidenceStatus === st}
+                          checked={form.priorityEvidenceStatus === st.val}
                           onChange={() =>
-                            updateField("priorityEvidenceStatus", st)
+                            updateField("priorityEvidenceStatus", st.val)
                           }
                           className="h-4 w-4 accent-[#294735]"
                         />
-                        <span>{st}</span>
+                        <span>{st.label}</span>
                       </label>
                     ))}
                   </div>
@@ -2293,7 +2332,7 @@ export default function ScholarshipApplicationWizard() {
                   className="scroll-mt-28"
                 >
                   <MandatoryLabel
-                    text="1. Present Status"
+                    text={t.page2.presentStatus}
                     tooltip="Mandatory: Select your current occupation or student status."
                   />
                   <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
@@ -2337,7 +2376,7 @@ export default function ScholarshipApplicationWizard() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
                   <div>
                     <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                      2. Personal Monthly Income (₹) (if any)
+                      {t.page2.monthlyIncome}
                     </label>
                     <input
                       type="number"
@@ -2356,35 +2395,41 @@ export default function ScholarshipApplicationWizard() {
                     className="scroll-mt-28"
                   >
                     <MandatoryLabel
-                      text="3. Can you attend the full 45-day course?"
+                      text={t.page2.canAttendCourse}
                       tooltip="Mandatory: Confirm your availability for the complete 45-day residential training in Bengaluru."
                     />
                     <div className="flex flex-wrap gap-4 pt-1.5">
-                      {(["Yes", "Need to discuss support"] as const).map(
-                        (opt) => (
-                          <label
-                            key={opt}
-                            className="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-[#292D29]"
-                          >
-                            <input
-                              type="radio"
-                              name="canAttendCompleteCourse"
-                              checked={form.canAttendCompleteCourse === opt}
-                              onChange={() =>
-                                updateField("canAttendCompleteCourse", opt)
-                              }
-                              className="h-4 w-4 accent-[#294735]"
-                            />
-                            <span>{opt}</span>
-                          </label>
-                        )
-                      )}
+                      {(
+                        [
+                          { val: "Yes", label: t.yes },
+                          {
+                            val: "Need to discuss support",
+                            label: t.page2.needToDiscussSupport,
+                          },
+                        ] as const
+                      ).map((opt) => (
+                        <label
+                          key={opt.val}
+                          className="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-[#292D29]"
+                        >
+                          <input
+                            type="radio"
+                            name="canAttendCompleteCourse"
+                            checked={form.canAttendCompleteCourse === opt.val}
+                            onChange={() =>
+                              updateField("canAttendCompleteCourse", opt.val)
+                            }
+                            className="h-4 w-4 accent-[#294735]"
+                          />
+                          <span>{opt.label}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-2">
-                      4. Leave / NOC Status (if employed)
+                      {t.page2.leaveNocStatus}
                     </label>
                     <div className="flex flex-wrap gap-3">
                       {(
@@ -2421,31 +2466,35 @@ export default function ScholarshipApplicationWizard() {
                   id="p2-sec4-heading"
                   className="font-editorial text-xl sm:text-2xl text-[#16261D]"
                 >
-                  Section 4: Support & Accessibility Requirements
+                  {t.page2.sec4Title}
                 </h2>
               </div>
 
               <div className="rounded-xl bg-[#F7F2E8]/60 border border-[#292D29]/12 p-4 space-y-3">
                 <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D]">
-                  Do you need assistance for mobility, reading, hearing,
-                  language, learning, or residential access?
+                  {t.page2.needsSupportQuestion}
                 </label>
                 <div className="flex items-center gap-6">
-                  {(["No", "Yes"] as const).map((opt) => (
+                  {(
+                    [
+                      { val: "No", label: t.no },
+                      { val: "Yes", label: t.yes },
+                    ] as const
+                  ).map((opt) => (
                     <label
-                      key={opt}
+                      key={opt.val}
                       className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#292D29]"
                     >
                       <input
                         type="radio"
                         name="needsSupportAssistance"
-                        checked={form.needsSupportAssistance === opt}
+                        checked={form.needsSupportAssistance === opt.val}
                         onChange={() =>
-                          updateField("needsSupportAssistance", opt)
+                          updateField("needsSupportAssistance", opt.val)
                         }
                         className="h-4 w-4 accent-[#294735]"
                       />
-                      <span>{opt}</span>
+                      <span>{opt.label}</span>
                     </label>
                   ))}
                 </div>
@@ -2456,7 +2505,7 @@ export default function ScholarshipApplicationWizard() {
                     className="pt-2 scroll-mt-28"
                   >
                     <MandatoryLabel
-                      text="Please describe the support needed (No medical diagnosis required)"
+                      text={t.page2.describeSupportNeeded}
                       tooltip="Mandatory when 'Yes' is selected: Describe the practical assistance needed during residential stay."
                     />
                     <textarea
@@ -2509,50 +2558,89 @@ export default function ScholarshipApplicationWizard() {
 
             {/* Document Uploaders */}
             <div className="grid grid-cols-1 gap-4">
-              {DOCUMENT_CHECKLIST_ITEMS.map((item, idx) => (
-                <CompressedFileUploader
-                  key={item.key}
-                  fieldKey={item.key}
-                  indexNumber={idx + 1}
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  infoTooltip={item.infoTooltip}
-                  required={item.required}
-                  allowNotApplicable={item.allowNotApplicable}
-                  status={form.docStatuses[item.key] || "uploaded"}
-                  fileData={uploadedFiles[item.key] || null}
-                  onStatusChange={(newStatus) => {
-                    setForm((prev) => ({
-                      ...prev,
-                      docStatuses: {
-                        ...prev.docStatuses,
-                        [item.key]: newStatus,
-                      },
-                    }));
-                    if (errors[`doc_${item.key}`]) {
-                      setErrors((prev) => {
-                        const next = { ...prev };
-                        delete next[`doc_${item.key}`];
-                        return next;
-                      });
-                    }
-                  }}
-                  onFileProcessed={(fileObj) => {
-                    setUploadedFiles((prev) => ({
-                      ...prev,
-                      [item.key]: fileObj,
-                    }));
-                    if (errors[`doc_${item.key}`]) {
-                      setErrors((prev) => {
-                        const next = { ...prev };
-                        delete next[`doc_${item.key}`];
-                        return next;
-                      });
-                    }
-                  }}
-                  errorMessage={errors[`doc_${item.key}`]}
-                />
-              ))}
+              {DOCUMENT_CHECKLIST_ITEMS.map((item, idx) => {
+                const localizedDocs: Record<
+                  string,
+                  { title: string; subtitle: string }
+                > = {
+                  passportPhoto: {
+                    title: t.page3.docs.passportPhotoTitle,
+                    subtitle: t.page3.docs.passportPhotoSub,
+                  },
+                  govIdProof: {
+                    title: t.page3.docs.govIdProofTitle,
+                    subtitle: t.page3.docs.govIdProofSub,
+                  },
+                  class10Certificate: {
+                    title: t.page3.docs.class10Title,
+                    subtitle: t.page3.docs.class10Sub,
+                  },
+                  additionalEducation: {
+                    title: t.page3.docs.additionalEduTitle,
+                    subtitle: t.page3.docs.additionalEduSub,
+                  },
+                  incomeEvidence: {
+                    title: t.page3.docs.incomeEvidenceTitle,
+                    subtitle: t.page3.docs.incomeEvidenceSub,
+                  },
+                  categoryDisabilityCert: {
+                    title: t.page3.docs.categoryCertTitle,
+                    subtitle: t.page3.docs.categoryCertSub,
+                  },
+                  nominationForm: {
+                    title: t.page3.docs.nominationFormTitle,
+                    subtitle: t.page3.docs.nominationFormSub,
+                  },
+                };
+                const docText = localizedDocs[item.key] || {
+                  title: item.title,
+                  subtitle: item.subtitle,
+                };
+                return (
+                  <CompressedFileUploader
+                    key={item.key}
+                    fieldKey={item.key}
+                    indexNumber={idx + 1}
+                    title={docText.title}
+                    subtitle={docText.subtitle}
+                    infoTooltip={item.infoTooltip}
+                    required={item.required}
+                    allowNotApplicable={item.allowNotApplicable}
+                    status={form.docStatuses[item.key] || "uploaded"}
+                    fileData={uploadedFiles[item.key] || null}
+                    onStatusChange={(newStatus) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        docStatuses: {
+                          ...prev.docStatuses,
+                          [item.key]: newStatus,
+                        },
+                      }));
+                      if (errors[`doc_${item.key}`]) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[`doc_${item.key}`];
+                          return next;
+                        });
+                      }
+                    }}
+                    onFileProcessed={(fileObj) => {
+                      setUploadedFiles((prev) => ({
+                        ...prev,
+                        [item.key]: fileObj,
+                      }));
+                      if (errors[`doc_${item.key}`]) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[`doc_${item.key}`];
+                          return next;
+                        });
+                      }
+                    }}
+                    errorMessage={errors[`doc_${item.key}`]}
+                  />
+                );
+              })}
             </div>
 
             {/* Pending Document Explanation */}
@@ -2566,13 +2654,12 @@ export default function ScholarshipApplicationWizard() {
             >
               {hasAnyPendingDoc ? (
                 <MandatoryLabel
-                  text="Identify Pending Document(s) and Expected Date of Submission"
+                  text={t.page3.pendingDocIdentify}
                   tooltip="Mandatory when any document above is marked 'Pending': Specify which document is pending and when you will submit it."
                 />
               ) : (
                 <label className="block text-xs sm:text-sm font-semibold text-[#16261D] mb-1.5">
-                  Identify Pending Document(s) and Expected Date of Submission
-                  (if any document is marked Pending)
+                  {t.page3.pendingDocIdentify} {t.optionalTag}
                 </label>
               )}
               <input
@@ -2614,7 +2701,7 @@ export default function ScholarshipApplicationWizard() {
               {/* Official Standard Declaration Scroll Box */}
               <div className="rounded-xl bg-[#F7F2E8] border border-[#C9A45C]/50 p-5 text-xs sm:text-sm leading-relaxed text-[#16261D] space-y-2">
                 <p className="font-semibold uppercase tracking-wider text-[11px] text-[#294735]">
-                  Official Candidate Declaration — Akshar Yoga Kendraa
+                  {t.page4.declarationHeading}
                 </p>
                 <p>{t.page4.declarationText}</p>
               </div>
@@ -2637,11 +2724,7 @@ export default function ScholarshipApplicationWizard() {
                     className="mt-0.5 h-5 w-5 accent-[#294735] shrink-0"
                   />
                   <span className="text-xs sm:text-sm font-semibold text-[#16261D] leading-relaxed inline-flex flex-wrap items-center gap-1.5">
-                    <span>
-                      I have read and agree to the above Applicant Declaration,
-                      confirm that all information and documents submitted are
-                      true, and consent to application verification.
-                    </span>
+                    <span>{t.page4.agreeCheckboxLabel}</span>
                     <span className="text-[#BD7959] font-bold">*</span>
                     <span
                       title="Mandatory: Check this box to confirm your agreement to the Applicant Declaration."
@@ -2662,7 +2745,7 @@ export default function ScholarshipApplicationWizard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div id="field-declarationPlace" className="scroll-mt-28">
                   <MandatoryLabel
-                    text="Place / City"
+                    text={t.page4.placeCity}
                     tooltip="Mandatory: Enter the town or city from where you are submitting this application."
                   />
                   <input
@@ -2685,7 +2768,7 @@ export default function ScholarshipApplicationWizard() {
 
                 <div>
                   <label className="block text-xs sm:text-[13px] font-semibold text-[#16261D] mb-1.5">
-                    Date
+                    {t.page4.dateLabel}
                   </label>
                   <input
                     type="date"
@@ -2717,7 +2800,7 @@ export default function ScholarshipApplicationWizard() {
                   onChange={(e) => updateField("wasAssisted", e.target.checked)}
                   className="h-4 w-4 accent-[#294735]"
                 />
-                <span>Did someone assist you in filling out this form?</span>
+                <span>{t.page4.wasAssistedQuestion}</span>
               </label>
 
               {form.wasAssisted && (
@@ -2728,7 +2811,7 @@ export default function ScholarshipApplicationWizard() {
                       className="scroll-mt-28"
                     >
                       <MandatoryLabel
-                        text="Language used to explain the form"
+                        text={t.page4.assistedLanguageUsed}
                         tooltip="Mandatory when assisted: Enter the language used to explain the form to the applicant."
                       />
                       <input
@@ -2756,7 +2839,7 @@ export default function ScholarshipApplicationWizard() {
                       className="scroll-mt-28"
                     >
                       <MandatoryLabel
-                        text="Assistant Name and Contact Number"
+                        text={t.page4.assistantNameContact}
                         tooltip="Mandatory when assisted: Enter the full name and phone number of the person who assisted."
                       />
                       <input
@@ -2797,10 +2880,8 @@ export default function ScholarshipApplicationWizard() {
                         className="mt-0.5 h-4 w-4 accent-[#294735] shrink-0"
                       />
                       <span>
-                        I confirm that I have accurately explained the contents
-                        of this application form to the candidate in their
-                        understood language and recorded their responses
-                        truthfully. <span className="text-[#BD7959]">*</span>
+                        {t.page4.assistantConfirmCheckbox}{" "}
+                        <span className="text-[#BD7959]">*</span>
                       </span>
                     </label>
                     {errors.assistantConfirmedCheckbox && (
