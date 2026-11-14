@@ -183,6 +183,24 @@ function buildHumanReadableTxt(
   ].join("\n");
 }
 
+interface SubmissionSuccessPayload {
+  ok: true;
+  referenceNumber: string;
+  submittedAt: string;
+  localCandidateFolderPath: string | null;
+  savedFileNames: string[];
+  googleSheetsSynced: boolean;
+  driveFolderUrl: string | null;
+  deduplicated?: boolean;
+}
+
+const inFlightSubmissions = new Map<string, Promise<SubmissionSuccessPayload>>();
+const completedSubmissions = new Map<
+  string,
+  { completedAt: number; payload: SubmissionSuccessPayload }
+>();
+const COMPLETED_DEDUP_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -199,178 +217,230 @@ export async function POST(request: Request) {
       );
     }
 
-    const referenceNumber = `AY-BYK-${new Date().getFullYear()}-${Math.floor(
-      10000 + Math.random() * 90000
-    )}`;
-    const submittedAt = new Date().toISOString();
+    const clientRef =
+      typeof body.referenceNumber === "string" &&
+      /^AY-BYK-\d{4}-\d{5}$/.test(body.referenceNumber.trim())
+        ? body.referenceNumber.trim()
+        : null;
 
-    // =========================================================================
-    // 1. LOCAL FOLDER STRUCTURE:
-    //    Main Folder (Scholarship_Applications_Data)
-    //      └── <Candidate Name - ReferenceNumber>
-    //            ├── application-details.txt
-    //            ├── application-details.json
-    //            └── Files/
-    //                  ├── 01_Passport_Photo_...jpg
-    //                  ├── 02_Aadhaar_Gov_ID_...jpg
-    //                  └── ...
-    // =========================================================================
-    let localCandidateFolderPath: string | null = null;
-    const savedFileNames: string[] = [];
+    const referenceNumber =
+      clientRef ||
+      `AY-BYK-${new Date().getFullYear()}-${Math.floor(
+        10000 + Math.random() * 90000
+      )}`;
 
-    try {
-      const mainFolderPath = path.join(
-        process.cwd(),
-        "Scholarship_Applications_Data"
-      );
-      const candidateFolderName = sanitizeFolderName(
-        `${form.fullName} - ${referenceNumber}`
-      );
-      const candidateFolderPath = path.join(
-        mainFolderPath,
-        candidateFolderName
-      );
-      const filesSubfolderPath = path.join(candidateFolderPath, "Files");
+    const normalizedCandidateKey = `${String(form.fullName)
+      .trim()
+      .toLowerCase()}|${String(form.mobileNumber).replace(/\D/g, "")}|${String(
+      form.govIdNumber || ""
+    )
+      .replace(/\s+/g, "")
+      .toLowerCase()}`;
 
-      await fs.mkdir(filesSubfolderPath, { recursive: true });
-      localCandidateFolderPath = candidateFolderPath;
+    const dedupKey = clientRef
+      ? `ref:${clientRef}`
+      : `cand:${normalizedCandidateKey}`;
 
-      // Save each compressed uploaded file inside Main Folder > Candidate Name > Files/
-      if (files && typeof files === "object") {
-        for (const [fieldKey, fileObj] of Object.entries(files)) {
-          const typedFile = fileObj as {
-            fileName?: string;
-            dataUrl?: string;
-          } | null;
-          if (typedFile && typedFile.dataUrl) {
-            const parts = String(typedFile.dataUrl).split(",");
-            if (parts.length >= 2) {
-              const buffer = Buffer.from(parts[1], "base64");
-              const prefix = FILE_FIELD_PREFIXES[fieldKey] || fieldKey;
-              const safeFileName = sanitizeFolderName(
-                `${prefix}_${typedFile.fileName || "document.jpg"}`
-              );
-              const targetFilePath = path.join(
-                filesSubfolderPath,
-                safeFileName
-              );
-              await fs.writeFile(targetFilePath, buffer);
-              savedFileNames.push(safeFileName);
-            }
-          }
-        }
+    // Clean up expired entries
+    const now = Date.now();
+    for (const [k, v] of completedSubmissions.entries()) {
+      if (now - v.completedAt > COMPLETED_DEDUP_TTL_MS) {
+        completedSubmissions.delete(k);
       }
+    }
 
-      // Save structured JSON & human-readable TXT in Main Folder > Candidate Name/
-      const jsonRecord = {
-        referenceNumber,
-        submittedAt,
-        candidateName: form.fullName,
-        mobileNumber: form.mobileNumber,
-        aadhaarOrGovIdType: form.govIdType,
-        aadhaarOrGovIdNumber: form.govIdNumber,
-        savedFilesInFilesFolder: savedFileNames,
-        formDetails: form,
-      };
-
-      const txtContent = buildHumanReadableTxt(
-        referenceNumber,
-        submittedAt,
-        form,
-        savedFileNames
-      );
-
-      await fs.writeFile(
-        path.join(candidateFolderPath, "application-details.json"),
-        JSON.stringify(jsonRecord, null, 2),
-        "utf-8"
-      );
-      await fs.writeFile(
-        path.join(candidateFolderPath, "application-details.txt"),
-        txtContent,
-        "utf-8"
-      );
-    } catch (fsErr) {
-      console.warn(
-        "Local folder creation skipped (e.g., read-only serverless environment):",
-        fsErr
+    // 1. If this exact submission already succeeded recently, return cached result
+    const existingCompleted =
+      completedSubmissions.get(dedupKey) ||
+      completedSubmissions.get(`cand:${normalizedCandidateKey}`);
+    if (existingCompleted) {
+      return NextResponse.json(
+        { ...existingCompleted.payload, deduplicated: true },
+        { status: 200 }
       );
     }
 
-    // =========================================================================
-    // 2. GOOGLE DRIVE + GOOGLE SHEETS WEBHOOK SYNC
-    //    Also creates: Main Folder > Candidate Name > Files (plus .txt & .json) in Google Drive
-    // =========================================================================
-    const webhookUrl =
-      process.env.GOOGLE_SHEETS_APPLICATION_WEBHOOK_URL ||
-      process.env.GOOGLE_SHEETS_WEBHOOK_URL ||
-      DEFAULT_GOOGLE_SHEETS_WEBHOOK_URL;
+    // 2. If a submission for this candidate/reference is currently in flight, await it
+    const existingInFlight =
+      inFlightSubmissions.get(dedupKey) ||
+      inFlightSubmissions.get(`cand:${normalizedCandidateKey}`);
+    if (existingInFlight) {
+      const sharedResult = await existingInFlight;
+      return NextResponse.json(
+        { ...sharedResult, deduplicated: true },
+        { status: 200 }
+      );
+    }
 
-    let googleSheetsSynced = false;
-    let driveFolderUrl: string | null = null;
+    const processPromise = (async (): Promise<SubmissionSuccessPayload> => {
+      const submittedAt = new Date().toISOString();
 
-    if (webhookUrl) {
+      // =========================================================================
+      // 1. LOCAL FOLDER STRUCTURE:
+      //    Main Folder (Scholarship_Applications_Data)
+      //      └── <Candidate Name - ReferenceNumber>
+      //            ├── application-details.txt
+      //            ├── application-details.json
+      //            └── Files/
+      //                  ├── 01_Passport_Photo_...jpg
+      //                  ├── 02_Aadhaar_Gov_ID_...jpg
+      //                  └── ...
+      // =========================================================================
+      let localCandidateFolderPath: string | null = null;
+      const savedFileNames: string[] = [];
+
       try {
-        const txtContentForDrive = buildHumanReadableTxt(
+        const mainFolderPath = path.join(
+          process.cwd(),
+          "Scholarship_Applications_Data"
+        );
+        const candidateFolderName = sanitizeFolderName(
+          `${form.fullName} - ${referenceNumber}`
+        );
+        const candidateFolderPath = path.join(
+          mainFolderPath,
+          candidateFolderName
+        );
+        const filesSubfolderPath = path.join(candidateFolderPath, "Files");
+
+        await fs.mkdir(filesSubfolderPath, { recursive: true });
+        localCandidateFolderPath = candidateFolderPath;
+
+        // Save each compressed uploaded file inside Main Folder > Candidate Name > Files/
+        if (files && typeof files === "object") {
+          for (const [fieldKey, fileObj] of Object.entries(files)) {
+            const typedFile = fileObj as {
+              fileName?: string;
+              dataUrl?: string;
+            } | null;
+            if (typedFile && typedFile.dataUrl) {
+              const parts = String(typedFile.dataUrl).split(",");
+              if (parts.length >= 2) {
+                const buffer = Buffer.from(parts[1], "base64");
+                const prefix = FILE_FIELD_PREFIXES[fieldKey] || fieldKey;
+                const safeFileName = sanitizeFolderName(
+                  `${prefix}_${typedFile.fileName || "document.jpg"}`
+                );
+                const targetFilePath = path.join(
+                  filesSubfolderPath,
+                  safeFileName
+                );
+                await fs.writeFile(targetFilePath, buffer);
+                savedFileNames.push(safeFileName);
+              }
+            }
+          }
+        }
+
+        // Save structured JSON & human-readable TXT in Main Folder > Candidate Name/
+        const jsonRecord = {
+          referenceNumber,
+          submittedAt,
+          candidateName: form.fullName,
+          mobileNumber: form.mobileNumber,
+          aadhaarOrGovIdType: form.govIdType,
+          aadhaarOrGovIdNumber: form.govIdNumber,
+          savedFilesInFilesFolder: savedFileNames,
+          formDetails: form,
+        };
+
+        const txtContent = buildHumanReadableTxt(
           referenceNumber,
           submittedAt,
           form,
           savedFileNames
         );
 
-        const res = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          redirect: "follow",
-          body: JSON.stringify({
-            formType: "CANDIDATE_DETAILED_APPLICATION_4PAGE",
+        await fs.writeFile(
+          path.join(candidateFolderPath, "application-details.json"),
+          JSON.stringify(jsonRecord, null, 2),
+          "utf-8"
+        );
+        await fs.writeFile(
+          path.join(candidateFolderPath, "application-details.txt"),
+          txtContent,
+          "utf-8"
+        );
+      } catch (fsErr) {
+        console.warn(
+          "Local folder creation skipped (e.g., read-only serverless environment):",
+          fsErr
+        );
+      }
+
+      // =========================================================================
+      // 2. GOOGLE DRIVE + GOOGLE SHEETS WEBHOOK SYNC
+      //    Also creates: Main Folder > Candidate Name > Files (plus .txt & .json) in Google Drive
+      // =========================================================================
+      const webhookUrl =
+        process.env.GOOGLE_SHEETS_APPLICATION_WEBHOOK_URL ||
+        process.env.GOOGLE_SHEETS_WEBHOOK_URL ||
+        DEFAULT_GOOGLE_SHEETS_WEBHOOK_URL;
+
+      let googleSheetsSynced = false;
+      let driveFolderUrl: string | null = null;
+
+      if (webhookUrl) {
+        try {
+          const txtContentForDrive = buildHumanReadableTxt(
             referenceNumber,
             submittedAt,
-            name: form.fullName,
-            age: form.age,
-            stateCity: form.villageTownDistrictState,
-            phone: form.mobileNumber,
-            email: form.email,
-            education: Array.isArray(form.educationRows)
-              ? form.educationRows
-                  .map(
-                    (r: {
-                      level: string;
-                      boardInstitution: string;
-                      yearOfPassing: string;
-                      certificateStatus: string;
-                    }) =>
-                      `${r.level}: ${r.boardInstitution || "N/A"} (${
-                        r.yearOfPassing || "-"
-                      }) [${r.certificateStatus}]`
-                  )
-                  .join(" | ")
-              : "",
-            income: `₹${form.totalAnnualFamilyIncome} (FY ${form.financialYear})`,
-            motivation: `Present Status: ${
-              form.presentEmploymentStatus || "-"
-            } | Course Availability: ${form.canAttendCompleteCourse || "Yes"}`,
-            consent: Boolean(form.declarationAgreed),
-            applicationData: form,
-            applicationTxtReport: txtContentForDrive,
-            compressedFiles: files || {},
-          }),
-        });
+            form,
+            savedFileNames
+          );
 
-        if (res.ok) {
-          googleSheetsSynced = true;
-          const resJson = await res.json().catch(() => null);
-          if (resJson?.driveFolderUrl) {
-            driveFolderUrl = resJson.driveFolderUrl;
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            redirect: "follow",
+            body: JSON.stringify({
+              formType: "CANDIDATE_DETAILED_APPLICATION_4PAGE",
+              referenceNumber,
+              submittedAt,
+              name: form.fullName,
+              age: form.age,
+              stateCity: form.villageTownDistrictState,
+              phone: form.mobileNumber,
+              email: form.email,
+              education: Array.isArray(form.educationRows)
+                ? form.educationRows
+                    .map(
+                      (r: {
+                        level: string;
+                        boardInstitution: string;
+                        yearOfPassing: string;
+                        certificateStatus: string;
+                      }) =>
+                        `${r.level}: ${r.boardInstitution || "N/A"} (${
+                          r.yearOfPassing || "-"
+                        }) [${r.certificateStatus}]`
+                    )
+                    .join(" | ")
+                : "",
+              income: `₹${form.totalAnnualFamilyIncome} (FY ${form.financialYear})`,
+              motivation: `Present Status: ${
+                form.presentEmploymentStatus || "-"
+              } | Course Availability: ${form.canAttendCompleteCourse || "Yes"}`,
+              consent: Boolean(form.declarationAgreed),
+              applicationData: form,
+              applicationTxtReport: txtContentForDrive,
+              compressedFiles: files || {},
+            }),
+          });
+
+          if (res.ok) {
+            googleSheetsSynced = true;
+            const resJson = await res.json().catch(() => null);
+            if (resJson?.driveFolderUrl) {
+              driveFolderUrl = resJson.driveFolderUrl;
+            }
           }
+        } catch (err) {
+          console.error("Google Sheets & Drive webhook sync error:", err);
         }
-      } catch (err) {
-        console.error("Google Sheets & Drive webhook sync error:", err);
       }
-    }
 
-    return NextResponse.json(
-      {
+      return {
         ok: true,
         referenceNumber,
         submittedAt,
@@ -378,9 +448,22 @@ export async function POST(request: Request) {
         savedFileNames,
         googleSheetsSynced,
         driveFolderUrl,
-      },
-      { status: 200 }
-    );
+      };
+    })();
+
+    inFlightSubmissions.set(dedupKey, processPromise);
+    inFlightSubmissions.set(`cand:${normalizedCandidateKey}`, processPromise);
+
+    try {
+      const resultPayload = await processPromise;
+      const entry = { completedAt: Date.now(), payload: resultPayload };
+      completedSubmissions.set(dedupKey, entry);
+      completedSubmissions.set(`cand:${normalizedCandidateKey}`, entry);
+      return NextResponse.json(resultPayload, { status: 200 });
+    } finally {
+      inFlightSubmissions.delete(dedupKey);
+      inFlightSubmissions.delete(`cand:${normalizedCandidateKey}`);
+    }
   } catch (err) {
     console.error("Application submission error:", err);
     return NextResponse.json(

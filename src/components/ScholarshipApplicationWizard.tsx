@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Check,
   ChevronRight,
@@ -332,10 +332,19 @@ function MandatoryLabel({
   );
 }
 
+function generateDraftReferenceNumber(): string {
+  return `AY-BYK-${new Date().getFullYear()}-${Math.floor(
+    10000 + Math.random() * 90000
+  )}`;
+}
+
 export default function ScholarshipApplicationWizard() {
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [form, setForm] = useState<ApplicationFormState>(INITIAL_FORM_STATE);
+  const [draftReferenceNumber, setDraftReferenceNumber] = useState<string>(() =>
+    generateDraftReferenceNumber()
+  );
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, CompressedDocumentFile | null>
   >({
@@ -352,6 +361,11 @@ export default function ScholarshipApplicationWizard() {
   const [pageBannerError, setPageBannerError] = useState<string | null>(null);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingLockRef = useRef(false);
+  const [compressingFields, setCompressingFields] = useState<
+    Record<string, boolean>
+  >({});
+  const isAnyFileCompressing = Object.values(compressingFields).some(Boolean);
   const [submissionResult, setSubmissionResult] = useState<{
     referenceNumber: string;
     submittedAt: string;
@@ -382,6 +396,12 @@ export default function ScholarshipApplicationWizard() {
           if (parsed?.savedAt) {
             setDraftSavedAt(parsed.savedAt);
           }
+          if (
+            typeof parsed?.draftReferenceNumber === "string" &&
+            parsed.draftReferenceNumber.startsWith("AY-BYK-")
+          ) {
+            setDraftReferenceNumber(parsed.draftReferenceNumber);
+          }
         }
       } catch {
         // Ignore corrupted draft
@@ -404,6 +424,7 @@ export default function ScholarshipApplicationWizard() {
               form,
               step: currentStep,
               savedAt: timestamp,
+              draftReferenceNumber,
             })
           );
           setDraftSavedAt(timestamp);
@@ -413,7 +434,7 @@ export default function ScholarshipApplicationWizard() {
       }, 600);
       return () => clearTimeout(timeout);
     }
-  }, [form, currentStep, submissionResult]);
+  }, [form, currentStep, submissionResult, draftReferenceNumber]);
 
   // Keep Permanent Address synced if "Same as Current Address" is checked
   useEffect(() => {
@@ -472,6 +493,7 @@ export default function ScholarshipApplicationWizard() {
           form,
           step: currentStep,
           savedAt: timestamp,
+          draftReferenceNumber,
         })
       );
       setDraftSavedAt(timestamp);
@@ -479,6 +501,7 @@ export default function ScholarshipApplicationWizard() {
   };
 
   const handleClearDraft = () => {
+    if (isSubmitting || submittingLockRef.current) return;
     if (
       typeof window !== "undefined" &&
       window.confirm(
@@ -487,6 +510,7 @@ export default function ScholarshipApplicationWizard() {
     ) {
       window.localStorage.removeItem(DRAFT_STORAGE_KEY);
       setForm(INITIAL_FORM_STATE);
+      setDraftReferenceNumber(generateDraftReferenceNumber());
       setUploadedFiles({
         passportPhoto: null,
         govIdProof: null,
@@ -496,6 +520,7 @@ export default function ScholarshipApplicationWizard() {
         categoryDisabilityCert: null,
         nominationForm: null,
       });
+      setCompressingFields({});
       setErrors({});
       setPageBannerError(null);
       setCurrentStep(1);
@@ -686,6 +711,9 @@ export default function ScholarshipApplicationWizard() {
   };
 
   const handleNextStep = () => {
+    if (isSubmitting || submittingLockRef.current || isAnyFileCompressing) {
+      return;
+    }
     if (validateStep(currentStep)) {
       const next = Math.min(4, currentStep + 1) as 1 | 2 | 3 | 4;
       setCurrentStep(next);
@@ -696,6 +724,7 @@ export default function ScholarshipApplicationWizard() {
   };
 
   const handlePrevStep = () => {
+    if (isSubmitting || submittingLockRef.current) return;
     const prev = Math.max(1, currentStep - 1) as 1 | 2 | 3 | 4;
     setCurrentStep(prev);
     setPageBannerError(null);
@@ -706,8 +735,13 @@ export default function ScholarshipApplicationWizard() {
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Layer 1: Synchronous lock prevents rapid double-clicks / duplicate invocations
+    if (submittingLockRef.current || isSubmitting || isAnyFileCompressing) {
+      return;
+    }
     if (!validateStep(4)) return;
 
+    submittingLockRef.current = true;
     setIsSubmitting(true);
     setPageBannerError(null);
 
@@ -716,6 +750,7 @@ export default function ScholarshipApplicationWizard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          referenceNumber: draftReferenceNumber,
           form,
           files: uploadedFiles,
         }),
@@ -727,6 +762,7 @@ export default function ScholarshipApplicationWizard() {
           data.message ||
             "Unable to submit application right now. Please verify your fields and try again."
         );
+        submittingLockRef.current = false;
         setIsSubmitting(false);
         return;
       }
@@ -740,12 +776,13 @@ export default function ScholarshipApplicationWizard() {
       ).length;
 
       setSubmissionResult({
-        referenceNumber: data.referenceNumber,
+        referenceNumber: data.referenceNumber || draftReferenceNumber,
         submittedAt: data.submittedAt,
         localCandidateFolderPath: data.localCandidateFolderPath || null,
         driveFolderUrl: data.driveFolderUrl || null,
         compressedCount,
       });
+      setIsSubmitting(false);
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -753,7 +790,7 @@ export default function ScholarshipApplicationWizard() {
       setPageBannerError(
         "Network error while submitting application. Your draft is safely saved—please try again."
       );
-    } finally {
+      submittingLockRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -861,8 +898,10 @@ export default function ScholarshipApplicationWizard() {
               <button
                 type="button"
                 onClick={() => {
+                  submittingLockRef.current = false;
                   setSubmissionResult(null);
                   setForm(INITIAL_FORM_STATE);
+                  setDraftReferenceNumber(generateDraftReferenceNumber());
                   setUploadedFiles({
                     passportPhoto: null,
                     govIdProof: null,
@@ -872,6 +911,7 @@ export default function ScholarshipApplicationWizard() {
                     categoryDisabilityCert: null,
                     nominationForm: null,
                   });
+                  setCompressingFields({});
                   setCurrentStep(1);
                 }}
                 className="text-xs font-semibold uppercase tracking-wider text-[#294735] underline hover:text-[#16261D]"
@@ -919,7 +959,8 @@ export default function ScholarshipApplicationWizard() {
             <button
               type="button"
               onClick={handleManualSaveDraft}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#294735]/30 bg-[#F7F2E8]/70 hover:bg-[#F7F2E8] px-2.5 py-1 text-xs font-semibold text-[#16261D] transition-colors"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#294735]/30 bg-[#F7F2E8]/70 hover:bg-[#F7F2E8] px-2.5 py-1 text-xs font-semibold text-[#16261D] transition-colors disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5 text-[#294735]" />
               {t.saveDraft}
@@ -927,7 +968,8 @@ export default function ScholarshipApplicationWizard() {
             <button
               type="button"
               onClick={handleClearDraft}
-              className="inline-flex items-center gap-1 rounded-md border border-[#BD7959]/30 px-2 py-1 text-xs font-medium text-[#BD7959] hover:bg-[#BD7959]/10 transition-colors"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1 rounded-md border border-[#BD7959]/30 px-2 py-1 text-xs font-medium text-[#BD7959] hover:bg-[#BD7959]/10 transition-colors disabled:opacity-50"
               title={t.clearDraft}
             >
               <RotateCcw className="h-3.5 w-3.5" />
@@ -952,7 +994,11 @@ export default function ScholarshipApplicationWizard() {
               <li key={item.step}>
                 <button
                   type="button"
+                  disabled={isSubmitting || isAnyFileCompressing}
                   onClick={() => {
+                    if (isSubmitting || submittingLockRef.current || isAnyFileCompressing) {
+                      return;
+                    }
                     if (item.step < currentStep) {
                       setCurrentStep(item.step);
                       setPageBannerError(null);
@@ -2687,6 +2733,12 @@ export default function ScholarshipApplicationWizard() {
                         });
                       }
                     }}
+                    onCompressingChange={(compressing) => {
+                      setCompressingFields((prev) => ({
+                        ...prev,
+                        [item.key]: compressing,
+                      }));
+                    }}
                     errorMessage={errors[`doc_${item.key}`]}
                   />
                 );
@@ -2982,21 +3034,36 @@ export default function ScholarshipApplicationWizard() {
             <button
               type="button"
               onClick={handleNextStep}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#294735] hover:bg-[#1e3527] text-[#F7F2E8] px-6 py-3.5 text-sm font-semibold shadow-sm transition-colors"
+              disabled={isSubmitting || isAnyFileCompressing}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#294735] hover:bg-[#1e3527] text-[#F7F2E8] px-6 py-3.5 text-sm font-semibold shadow-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <span>{t.nextButton}</span>
-              <ChevronRight className="h-4 w-4" />
+              {isAnyFileCompressing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-[#C9A45C]" />
+                  <span>Compressing document…</span>
+                </>
+              ) : (
+                <>
+                  <span>{t.nextButton}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </>
+              )}
             </button>
           ) : (
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#16261D] hover:bg-[#294735] text-[#FFFFFF] border border-[#C9A45C] px-7 py-3.5 text-sm sm:text-base font-semibold shadow-md transition-colors disabled:opacity-70"
+              disabled={isSubmitting || isAnyFileCompressing}
+              className="inline-flex items-center justify-center gap-2.5 rounded-lg bg-[#16261D] hover:bg-[#294735] text-[#FFFFFF] border border-[#C9A45C] px-7 py-3.5 text-sm sm:text-base font-semibold shadow-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin text-[#C9A45C]" />
                   <span>{t.submittingButton}</span>
+                </>
+              ) : isAnyFileCompressing ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin text-[#C9A45C]" />
+                  <span>Compressing document…</span>
                 </>
               ) : (
                 <>

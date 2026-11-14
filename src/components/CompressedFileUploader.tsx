@@ -32,6 +32,7 @@ interface CompressedFileUploaderProps {
   fileData: CompressedDocumentFile | null;
   onStatusChange: (status: DocumentItemStatus) => void;
   onFileProcessed: (file: CompressedDocumentFile | null) => void;
+  onCompressingChange?: (isCompressing: boolean) => void;
   errorMessage?: string;
 }
 
@@ -47,6 +48,7 @@ export default function CompressedFileUploader({
   fileData,
   onStatusChange,
   onFileProcessed,
+  onCompressingChange,
   errorMessage,
 }: CompressedFileUploaderProps) {
   const { t } = useLanguage();
@@ -59,6 +61,7 @@ export default function CompressedFileUploader({
     if (!rawFile) return;
     setLocalError(null);
     setIsCompressing(true);
+    onCompressingChange?.(true);
 
     try {
       const processed = await processAndCompressFile(rawFile, fieldKey);
@@ -72,6 +75,7 @@ export default function CompressedFileUploader({
       );
     } finally {
       setIsCompressing(false);
+      onCompressingChange?.(false);
       if (inputRef.current) {
         inputRef.current.value = "";
       }
