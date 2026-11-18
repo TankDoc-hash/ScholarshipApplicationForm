@@ -12,10 +12,10 @@ export const metadata: Metadata = {
     "Official 4-Step Candidate Application Form for the National Scholarship Programme for 1,500 Underprivileged Youth | Akshar Yoga Kendraa.",
   icons: {
     icon: [
-      { url: "/assets/512X512.png?v=2", type: "image/png", sizes: "512x512" },
+      { url: "/assets/512X512.png?v=3", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: "/assets/512X512.png?v=2",
-    apple: "/assets/512X512.png?v=2",
+    shortcut: "/assets/512X512.png?v=3",
+    apple: "/assets/512X512.png?v=3",
   },
   openGraph: {
     title:
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     siteName: "Akshar Yoga Kendraa",
     images: [
       {
-        url: "/assets/share-logo.png?v=2",
+        url: "/assets/share-logo.png?v=3",
         width: 512,
         height: 512,
         alt: "Akshar Yoga Kendraa — Bharat Yoga Kranti Scholarship Application",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
       "Candidate Scholarship Application | Bharat Yoga Kranti — Akshar Yoga Kendraa",
     description:
       "Official 4-Step Candidate Application Form for the National Scholarship Programme for 1,500 Underprivileged Youth | Akshar Yoga Kendraa.",
-    images: ["/assets/share-logo.png?v=2"],
+    images: ["/assets/share-logo.png?v=3"],
   },
 };
 
@@ -53,8 +53,8 @@ export default function RootLayout({
   return (
     <html lang="en-IN" className="antialiased">
       <head>
-        <link rel="icon" href="/assets/512X512.png?v=2" type="image/png" />
-        <link rel="apple-touch-icon" href="/assets/512X512.png?v=2" />
+        <link rel="icon" href="/assets/512X512.png?v=3" type="image/png" />
+        <link rel="apple-touch-icon" href="/assets/512X512.png?v=3" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
