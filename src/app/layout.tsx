@@ -22,11 +22,10 @@ export const metadata: Metadata = {
       "Candidate Scholarship Application | Bharat Yoga Kranti — Akshar Yoga Kendraa",
     description:
       "Official 4-Step Candidate Application Form for the National Scholarship Programme for 1,500 Underprivileged Youth | Akshar Yoga Kendraa.",
-    url: "https://scholarship-application-form-one.vercel.app",
     siteName: "Akshar Yoga Kendraa",
     images: [
       {
-        url: "/assets/share-logo.png?v=3",
+        url: "/assets/akshar-kendraa-og.png",
         width: 512,
         height: 512,
         alt: "Akshar Yoga Kendraa — Bharat Yoga Kranti Scholarship Application",
@@ -41,7 +40,7 @@ export const metadata: Metadata = {
       "Candidate Scholarship Application | Bharat Yoga Kranti — Akshar Yoga Kendraa",
     description:
       "Official 4-Step Candidate Application Form for the National Scholarship Programme for 1,500 Underprivileged Youth | Akshar Yoga Kendraa.",
-    images: ["/assets/share-logo.png?v=3"],
+    images: ["/assets/akshar-kendraa-og.png"],
   },
 };
 
