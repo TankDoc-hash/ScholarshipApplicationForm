@@ -5,16 +5,43 @@ import PortalHeader from "@/components/PortalHeader";
 import PortalFooter from "@/components/PortalFooter";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://scholarship-application-form-one.vercel.app"),
   title:
     "Candidate Scholarship Application | Bharat Yoga Kranti — Akshar Yoga Kendraa",
   description:
     "Official 4-Step Candidate Application Form for the National Scholarship Programme for 1,500 Underprivileged Youth | Akshar Yoga Kendraa.",
   icons: {
     icon: [
-      { url: "/assets/512X512.png", type: "image/png", sizes: "512x512" },
+      { url: "/assets/512X512.png?v=2", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: "/assets/512X512.png",
-    apple: "/assets/512X512.png",
+    shortcut: "/assets/512X512.png?v=2",
+    apple: "/assets/512X512.png?v=2",
+  },
+  openGraph: {
+    title:
+      "Candidate Scholarship Application | Bharat Yoga Kranti — Akshar Yoga Kendraa",
+    description:
+      "Official 4-Step Candidate Application Form for the National Scholarship Programme for 1,500 Underprivileged Youth | Akshar Yoga Kendraa.",
+    url: "https://scholarship-application-form-one.vercel.app",
+    siteName: "Akshar Yoga Kendraa",
+    images: [
+      {
+        url: "/assets/share-logo.png?v=2",
+        width: 512,
+        height: 512,
+        alt: "Akshar Yoga Kendraa — Bharat Yoga Kranti Scholarship Application",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title:
+      "Candidate Scholarship Application | Bharat Yoga Kranti — Akshar Yoga Kendraa",
+    description:
+      "Official 4-Step Candidate Application Form for the National Scholarship Programme for 1,500 Underprivileged Youth | Akshar Yoga Kendraa.",
+    images: ["/assets/share-logo.png?v=2"],
   },
 };
 
@@ -26,7 +53,8 @@ export default function RootLayout({
   return (
     <html lang="en-IN" className="antialiased">
       <head>
-        <link rel="icon" href="/assets/512X512.png" type="image/png" />
+        <link rel="icon" href="/assets/512X512.png?v=2" type="image/png" />
+        <link rel="apple-touch-icon" href="/assets/512X512.png?v=2" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
