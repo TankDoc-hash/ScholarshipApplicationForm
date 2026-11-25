@@ -839,7 +839,7 @@ export default function ScholarshipApplicationWizard() {
               <p>
                 Thank you for expressing your interest in{" "}
                 <strong>
-                  Bharath Yoga Kranti National Yoga Education and Scholarship
+                  Bharat Yoga Kranti National Yoga Education and Scholarship
                   Initiative
                 </strong>
                 .
@@ -855,7 +855,7 @@ export default function ScholarshipApplicationWizard() {
                 connecting with you!
               </p>
               <p className="font-semibold text-[#294735] pt-1">
-                Team Akshar Yoga.
+                Team Akshar Yoga Kendraa.
               </p>
             </div>
 
